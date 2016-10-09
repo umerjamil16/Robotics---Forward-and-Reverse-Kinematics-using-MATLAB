@@ -1,0 +1,45 @@
+% UGV Forward kinematics
+close all;
+clc;
+clear;
+syms v1 v2 v3 v4 v5 v6;
+l2 = 0.508;
+l5 = 0.2;
+W = [-0.5 2 -0.5 2 -0.5 2];
+
+% dh parammeters
+i1 = Link ('d', 0, 'a', 0.508, 'alpha', 0);
+i2 = Link ('d', 0, 'a', 0, 'alpha', -pi/2);
+i3 = Link ('theta', 0, 'a', 0, 'alpha', pi/2);
+i4 = Link ('d', 0, 'a', 0, 'alpha', -pi/2);
+i5 = Link ('d', 0.2, 'a', 0, 'alpha', 0);
+
+i1.qlim=[45 100] * pi/180;
+i2.qlim=[260 315] * pi/180;
+i3.qlim=[0.2 0.7];
+i4.qlim=[0 180] * pi/180;
+i5.qlim=[0 360] * pi/180;
+
+% homogenous transforms
+T01 = i1.A(v1);
+T12 = i2.A(v2);
+T23 = i3.A(v3);
+T34 = i4.A(v4);
+T45 = i5.A(v5);
+
+% final transformation matrix = forward kinematics
+T05 = T01 * T12 * T23 * T34 * T45;
+disp(vpa(T05));
+UGV = SerialLink([i1 i2 i3 i4 i5], 'name', 'UGV MANIPULATOR');
+
+UGV.plot([pi/4 -pi/6 0.5 pi/4 pi/4], 'workspace', W);
+
+qi=[0 0 0 0 0];
+%qi=[pi/4, -pi/6, 0.5, pi/4, pi/4];
+final=UGV.fkine(qi);
+disp(final);
+
+q0 = [v1 v2 v3 v4 v5];
+m = [1 1 1 1 0 0];
+q = UGV.ikine(final, vpa(q0), m, 'ilimit', 5)
+disp(vpa(q))
